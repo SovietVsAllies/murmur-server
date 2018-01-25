@@ -1,9 +1,5 @@
-from channels.routing import route
-
-from messaging.consumers import message_connect
-from messaging.consumers import message_consumer
+from channels.routing import include
 
 channel_routing = [
-    route('websocket.connect', message_connect),
-    route('websocket.receive', message_consumer),
+    include('messaging.routing.channel_routing')
 ]
