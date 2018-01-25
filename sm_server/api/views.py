@@ -19,8 +19,8 @@ class AccountViewSet(viewsets.ViewSet):
             account = Account(identity_key=identity_key, signed_pre_key=signed_pre_key)
             account.save()
             return Response(AccountSerializer(account).data)
-        except KeyError:
-            return Response(status=status.HTTP_400_BAD_REQUEST)
+        except KeyError as e:
+            raise ValidationError('%s is required' % e)
 
 
 class PreKeyViewSet(viewsets.ViewSet):
