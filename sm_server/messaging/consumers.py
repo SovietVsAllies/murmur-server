@@ -18,8 +18,8 @@ def message_connect(message):
     params = parse_qs(message.content['query_string'])
     try:
         owner = uuid.UUID(bytes=base64.b64decode(params[b'account_id'][0].decode() + '=='))
-        owner = Account.objects.get(id=owner)
         message.channel_session['owner'] = owner
+        owner = Account.objects.get(id=owner)
         channel = ActiveChannel.objects.filter(owner=owner)
         if channel.exists():
             channel.delete()
@@ -46,7 +46,7 @@ def message_consumer(message):
                 channel.send({
                     'type': 'received_message',
                     'data': {
-                        'sender': base64.b64encode(message.channel_session['owner'].id.bytes)
+                        'sender': base64.b64encode(message.channel_session['owner'].bytes)
                             .decode().rstrip('='),
                         'content': data['content'],
                     },
@@ -59,5 +59,5 @@ def message_consumer(message):
 
 @channel_session
 def message_disconnect(message):
-    owner = message.channel_session['owner']
+    owner = Account.objects.get(id=message.channel_session['owner'])
     ActiveChannel.objects.get(owner=owner).delete()
