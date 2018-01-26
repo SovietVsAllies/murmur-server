@@ -17,9 +17,9 @@ def message_connect(message):
     message.reply_channel.send({'accept': True})
     params = parse_qs(message.content['query_string'])
     try:
-        owner = base64.b64decode(params[b'account_id'][0].decode() + '==')
-        message.channel_session['owner'] = owner
+        owner = uuid.UUID(bytes=base64.b64decode(params[b'account_id'][0].decode() + '=='))
         owner = Account.objects.get(id=owner)
+        message.channel_session['owner'] = owner
         channel = ActiveChannel.objects.filter(owner=owner)
         if channel.exists():
             channel.delete()
