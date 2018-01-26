@@ -8,7 +8,7 @@ from rest_framework.exceptions import ValidationError
 from rest_framework.response import Response
 
 from account.models import Account, PreKey
-from api.serializers import AccountSerializer
+from api.serializers import AccountSerializer, PreKeySerializer
 
 
 def validate_account(pk):
@@ -58,3 +58,13 @@ class PreKeyViewSet(viewsets.ViewSet):
             raise ValidationError({'code': -100, 'message': 'Invalid request: %s' % e})
         except KeyError as e:
             raise ValidationError({'code': -100, 'message': '%s is required' % e})
+
+    def retrieve(self, request, pk):
+        try:
+            account = validate_account(pk)
+            pre_key = PreKey.objects.get(account=account)
+            response = Response(PreKeySerializer(pre_key))
+            pre_key.delete()
+            return response
+        except PreKey.DoesNotExist:
+            return Response({'code': -102, 'message': 'No pre keys for this account'})
