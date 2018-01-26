@@ -1,5 +1,6 @@
 import base64
 import json
+import traceback
 import uuid
 from urllib.parse import parse_qs
 
@@ -28,7 +29,7 @@ def message_connect(message):
             channel.save()
             return
         except (ObjectDoesNotExist, KeyError):
-            pass
+            traceback.print_exc()
     message.reply_channel.send({'close': True})
 
 
@@ -55,7 +56,7 @@ def message_consumer(message):
             else:
                 PendingMessage(receiver=receiver, payload=data['content'].encode()).save()
     except (ObjectDoesNotExist, KeyError):
-        pass
+        traceback.print_exc()
 
 
 @channel_session
