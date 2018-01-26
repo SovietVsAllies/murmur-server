@@ -19,7 +19,7 @@ def message_connect(message):
     try:
         owner = params[b'account_id'][0].decode()
         message.channel_session['owner'] = owner
-        owner = uuid.UUID(bytes=base64.b64decode(owner + '=='))
+        owner = uuid.UUID(owner)
         owner = Account.objects.get(id=owner)
         channel = ActiveChannel.objects.filter(owner=owner)
         if channel.exists():
@@ -39,7 +39,7 @@ def message_consumer(message):
         data = json.loads(content)
         if data['type'] == 'send_message':
             data = data['data']
-            receiver = uuid.UUID(bytes=base64.b64decode(data['receiver'] + '=='))
+            receiver = uuid.UUID(data['receiver'])
             receiver = Account.objects.get(id=receiver)
             channel = ActiveChannel.objects.filter(owner=receiver)
             if channel.exists():
@@ -59,6 +59,5 @@ def message_consumer(message):
 
 @channel_session
 def message_disconnect(message):
-    owner = message.channel_session['owner'] + '=='
-    owner = Account.objects.get(id=uuid.UUID(bytes=base64.b64decode(owner)))
+    owner = Account.objects.get(id=uuid.UUID(message.channel_session['owner']))
     ActiveChannel.objects.get(owner=owner).delete()
