@@ -60,11 +60,10 @@ class PreKeyViewSet(viewsets.ViewSet):
             raise ValidationError({'code': -100, 'message': '%s is required' % e})
 
     def retrieve(self, request, pk):
-        try:
-            account = validate_account(pk)
-            pre_key = PreKey.objects.filter(account=account).order_by('key_id')[0]
-            response = Response(PreKeySerializer(pre_key).data)
-            pre_key.delete()
-            return response
-        except PreKey.DoesNotExist:
-            return Response({'code': -102, 'message': 'No pre keys for this account'})
+        account = validate_account(pk)
+        pre_key = PreKey.objects.filter(account=account).order_by('key_id').first()
+        if not pre_key:
+            raise ValidationError({'code': -102, 'message': 'No pre keys for this account'})
+        response = Response(PreKeySerializer(pre_key).data)
+        pre_key.delete()
+        return response
