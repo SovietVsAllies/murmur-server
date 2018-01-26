@@ -14,8 +14,8 @@ from api.serializers import AccountSerializer
 class AccountViewSet(viewsets.ViewSet):
     def create(self, request):
         try:
-            identity_key = base64.b64decode(request.data['identity_key'])
-            signed_pre_key = base64.b64decode(request.data['signed_pre_key'])
+            identity_key = base64.b64decode(request.data['identity_key'] + '==')
+            signed_pre_key = base64.b64decode(request.data['signed_pre_key'] + '==')
             account = Account(identity_key=identity_key, signed_pre_key=signed_pre_key)
             account.save()
             return Response(AccountSerializer(account).data)
@@ -26,9 +26,10 @@ class AccountViewSet(viewsets.ViewSet):
 class PreKeyViewSet(viewsets.ViewSet):
     def create(self, request):
         try:
-            account = Account.objects.get(id=uuid.UUID(request.data['account']))
+            account = Account.objects.get(id=uuid.UUID(bytes=base64.b64decode(
+                request.data['account'] + '==')))
             key_ids = request.data['key_ids']
-            keys = list(map(base64.b64decode, request.data['keys']))
+            keys = list(map(lambda k: base64.b64decode(k + '=='), request.data['keys']))
             if len(key_ids) != len(keys):
                 raise ValidationError('Key count does not match')
             with transaction.atomic():

@@ -18,7 +18,7 @@ def message_connect(message):
     params = parse_qs(message.content['query_string'])
     if b'user' in params:
         try:
-            owner = base64.b64decode(params[b'user'][0].decode() + '==')
+            owner = base64.b64decode(params[b'account_id'][0].decode() + '==')
             message.channel_session['owner'] = owner
             owner = Account.objects.get(id=owner)
             channel = ActiveChannel.objects.filter(owner=owner)
