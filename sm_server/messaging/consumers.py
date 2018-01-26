@@ -38,7 +38,7 @@ def message_consumer(message):
         data = json.loads(content)
         if data['type'] == 'send_message':
             data = data['data']
-            receiver = uuid.UUID(base64.b64decode(data['receiver'] + '=='))
+            receiver = uuid.UUID(bytes=base64.b64decode(data['receiver'] + '=='))
             receiver = Account.objects.get(id=receiver)
             channel = ActiveChannel.objects.filter(owner=receiver)
             if channel.exists():
