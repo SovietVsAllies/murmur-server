@@ -16,19 +16,18 @@ from messaging.models import PendingMessage
 def message_connect(message):
     message.reply_channel.send({'accept': True})
     params = parse_qs(message.content['query_string'])
-    if b'user' in params:
-        try:
-            owner = base64.b64decode(params[b'account_id'][0].decode() + '==')
-            message.channel_session['owner'] = owner
-            owner = Account.objects.get(id=owner)
-            channel = ActiveChannel.objects.filter(owner=owner)
-            if channel.exists():
-                channel.delete()
-            channel = ActiveChannel(owner=owner, name=message.reply_channel.name)
-            channel.save()
-            return
-        except (ObjectDoesNotExist, KeyError) as e:
-            print(e)
+    try:
+        owner = base64.b64decode(params[b'account_id'][0].decode() + '==')
+        message.channel_session['owner'] = owner
+        owner = Account.objects.get(id=owner)
+        channel = ActiveChannel.objects.filter(owner=owner)
+        if channel.exists():
+            channel.delete()
+        channel = ActiveChannel(owner=owner, name=message.reply_channel.name)
+        channel.save()
+        return
+    except (ObjectDoesNotExist, KeyError) as e:
+        print(e)
     message.reply_channel.send({'close': True})
 
 
