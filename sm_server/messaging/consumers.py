@@ -5,7 +5,6 @@ from urllib.parse import parse_qs
 
 from channels import Channel
 from channels.sessions import channel_session
-from django.core.exceptions import ObjectDoesNotExist
 
 from account.models import Account
 from messaging.models import ActiveChannel
@@ -27,7 +26,7 @@ def message_connect(message):
         channel = ActiveChannel(owner=owner, name=message.reply_channel.name)
         channel.save()
         return
-    except (ObjectDoesNotExist, KeyError) as e:
+    except Exception as e:
         print(e)
     message.reply_channel.send({'close': True})
 
@@ -53,7 +52,7 @@ def message_consumer(message):
                 })
             else:
                 PendingMessage(receiver=receiver, payload=data['content'].encode()).save()
-    except (ObjectDoesNotExist, KeyError) as e:
+    except Exception as e:
         print(e)
 
 
