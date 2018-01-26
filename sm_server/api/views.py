@@ -62,8 +62,8 @@ class PreKeyViewSet(viewsets.ViewSet):
     def retrieve(self, request, pk):
         try:
             account = validate_account(pk)
-            pre_key = PreKey.objects.get(account=account)
-            response = Response(PreKeySerializer(pre_key))
+            pre_key = PreKey.objects.filter(account=account).order_by('key_id')[0]
+            response = Response(PreKeySerializer(pre_key).data)
             pre_key.delete()
             return response
         except PreKey.DoesNotExist:
