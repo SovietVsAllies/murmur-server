@@ -47,6 +47,7 @@ def message_consumer(message):
                     'type': 'received_message',
                     'data': {
                         'sender': message.channel_session['owner'],
+                        'message_type': data['message_type'],
                         'content': data['content'],
                     },
                 })})
