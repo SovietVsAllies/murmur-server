@@ -27,7 +27,7 @@ def message_connect(message):
             channel = ActiveChannel(owner=owner, name=message.reply_channel.name)
             channel.save()
             return
-        except ObjectDoesNotExist:
+        except (ObjectDoesNotExist, KeyError):
             pass
     message.reply_channel.send({'close': True})
 
@@ -54,7 +54,7 @@ def message_consumer(message):
                 })
             else:
                 PendingMessage(receiver=receiver, payload=data['content'].encode()).save()
-    except ObjectDoesNotExist:
+    except (ObjectDoesNotExist, KeyError):
         pass
 
 
