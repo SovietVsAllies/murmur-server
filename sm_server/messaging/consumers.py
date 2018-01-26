@@ -44,13 +44,13 @@ def message_consumer(message):
             channel = ActiveChannel.objects.filter(owner=receiver)
             if channel.exists():
                 channel = Channel(channel.get().name)
-                channel.send({
+                channel.send({'text': {
                     'type': 'received_message',
                     'data': {
                         'sender': message.channel_session['owner'],
                         'content': data['content'],
                     },
-                })
+                }})
             else:
                 PendingMessage(receiver=receiver, payload=data['content'].encode()).save()
     except:
