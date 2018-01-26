@@ -49,7 +49,7 @@ class PreKeyViewSet(viewsets.ViewSet):
                 raise ValidationError('Key count does not match')
             with transaction.atomic():
                 for key_id, key in zip(key_ids, keys):
-                    pre_key = PreKey.objects.filter(key_id=key_id)
+                    pre_key = PreKey.objects.filter(account=account, key_id=key_id)
                     if pre_key.exists():
                         pre_key.delete()
                     PreKey(account=account, key_id=key_id, key=key).save()
