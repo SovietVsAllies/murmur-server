@@ -1,4 +1,6 @@
+import base64
 import json
+import uuid
 from urllib.parse import parse_qs
 
 from channels import Channel
@@ -16,9 +18,9 @@ def message_connect(message):
     params = parse_qs(message.content['query_string'])
     if b'user' in params:
         try:
-            user = params[b'user'][0].decode('utf-8')
-            message.channel_session['user'] = user
-            owner = Account.objects.get(id=user)
+            owner = base64.b64decode(params[b'user'][0].decode() + '==')
+            message.channel_session['owner'] = owner
+            owner = Account.objects.get(id=owner)
             channel = ActiveChannel.objects.filter(owner=owner)
             if channel.exists():
                 channel.delete()
@@ -35,20 +37,28 @@ def message_consumer(message):
     try:
         content = message.content['text']
         data = json.loads(content)
-        receiver = Account.objects.get(id=data['receiver'])
-        channel = ActiveChannel.objects.filter(owner=receiver)
-        if channel.exists():
-            channel = Channel(channel.get().name)
-            channel.send({
-                'text': message.channel_session['user'] + ': ' + data['content'],
-            })
-        else:
-            PendingMessage(receiver=receiver, payload=data['content'].encode('utf-8')).save()
+        if data['type'] == 'send_message':
+            data = data['data']
+            receiver = uuid.UUID(base64.b64decode(data['receiver'] + '=='))
+            receiver = Account.objects.get(id=receiver)
+            channel = ActiveChannel.objects.filter(owner=receiver)
+            if channel.exists():
+                channel = Channel(channel.get().name)
+                channel.send({
+                    'type': 'received_message',
+                    'data': {
+                        'sender': base64.b64encode(message.channel_session['owner'].id.bytes)
+                            .decode().rstrip('='),
+                        'content': data['content'],
+                    },
+                })
+            else:
+                PendingMessage(receiver=receiver, payload=data['content'].encode()).save()
     except ObjectDoesNotExist:
         pass
 
 
 @channel_session
 def message_disconnect(message):
-    owner = Account.objects.get(id=message.channel_session['user'])
+    owner = message.channel_session['owner']
     ActiveChannel.objects.get(owner=owner).delete()
