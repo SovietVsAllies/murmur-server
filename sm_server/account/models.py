@@ -10,5 +10,8 @@ class Account(models.Model):
 
 class PreKey(models.Model):
     account = models.ForeignKey(Account, on_delete=models.CASCADE)
-    key_id = models.IntegerField(unique=True)
+    key_id = models.IntegerField()
     key = models.BinaryField()
+
+    class Meta:
+        unique_together = ('account', 'key_id')
