@@ -1,5 +1,6 @@
 import base64
 import json
+import traceback
 import uuid
 from urllib.parse import parse_qs
 
@@ -26,8 +27,8 @@ def message_connect(message):
         channel = ActiveChannel(owner=owner, name=message.reply_channel.name)
         channel.save()
         return
-    except Exception as e:
-        print(e)
+    except:
+        traceback.print_exc()
     message.reply_channel.send({'close': True})
 
 
@@ -52,8 +53,8 @@ def message_consumer(message):
                 })
             else:
                 PendingMessage(receiver=receiver, payload=data['content'].encode()).save()
-    except Exception as e:
-        print(e)
+    except:
+        traceback.print_exc()
 
 
 @channel_session
