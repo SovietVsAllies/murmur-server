@@ -11,6 +11,15 @@ from account.models import Account, PreKey
 from api.serializers import AccountSerializer
 
 
+def validate_account(pk):
+    try:
+        return Account.objects.get(id=uuid.UUID(bytes=base64.b64decode(pk + '==')))
+    except (binascii.Error, ValueError):
+        raise ValidationError({'code': -100, 'message': 'Invalid account id'})
+    except Account.DoesNotExist:
+        raise ValidationError({'code': -101, 'message': 'Account does not exist'})
+
+
 class AccountViewSet(viewsets.ViewSet):
     def create(self, request):
         try:
@@ -22,12 +31,18 @@ class AccountViewSet(viewsets.ViewSet):
         except KeyError as e:
             raise ValidationError({'code': -100, 'message': '%s is required' % e})
 
+    def retrieve(self, request, pk):
+        try:
+            account = validate_account(pk)
+            return Response(AccountSerializer(account).data)
+        except KeyError as e:
+            raise ValidationError({'code': -100, 'message': '%s is required' % e})
+
 
 class PreKeyViewSet(viewsets.ViewSet):
     def create(self, request):
         try:
-            account = Account.objects.get(id=uuid.UUID(bytes=base64.b64decode(
-                request.data['account'] + '==')))
+            account = validate_account(request.data['account'])
             key_ids = request.data['key_ids']
             keys = list(map(lambda k: base64.b64decode(k + '=='), request.data['keys']))
             if len(key_ids) != len(keys):
@@ -41,7 +56,5 @@ class PreKeyViewSet(viewsets.ViewSet):
             return Response({'code': 0})
         except (ValueError, binascii.Error) as e:
             raise ValidationError({'code': -100, 'message': 'Invalid request: %s' % e})
-        except Account.DoesNotExist:
-            raise ValidationError({'code': -101, 'message': 'Account does not exist'})
         except KeyError as e:
             raise ValidationError({'code': -100, 'message': '%s is required' % e})
